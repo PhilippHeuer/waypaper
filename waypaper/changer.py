@@ -1,5 +1,6 @@
 """Module that runs the system processes to change the wallpaper"""
 
+import os
 import subprocess
 import time
 from waypaper.config import Config
@@ -19,8 +20,8 @@ def change_wallpaper(image_path: Path, cf: Config, monitor: str, txt: Chinese|En
             # Kill previous swaybg instances:
             try:
                 subprocess.check_output(["pgrep", "swaybg"], encoding='utf-8')
-                subprocess.Popen(["killall", "swaybg"])
-                time.sleep(0.005)
+                killProc = subprocess.Popen(["killall", "swaybg"])
+                killProc.wait()
             except subprocess.CalledProcessError:
                 pass
 
@@ -30,7 +31,8 @@ def change_wallpaper(image_path: Path, cf: Config, monitor: str, txt: Chinese|En
                 # command.extend(["-o", monitor])
             command.extend(["-i", str(image_path)])
             command.extend(["-m", fill, "-c", cf.color])
-            subprocess.Popen(command)
+            with open(os.devnull, 'w') as devnull:
+                subprocess.Popen(command, stdout=devnull, stderr=devnull, start_new_session=True)
             print(f"{txt.msg_setwith} {cf.backend}")
 
         # swww backend:
@@ -40,14 +42,14 @@ def change_wallpaper(image_path: Path, cf: Config, monitor: str, txt: Chinese|En
             # Because swaybg and hyprpaper are known to conflict with swww
             try:
                 subprocess.check_output(["pgrep", "swaybg"], encoding='utf-8')
-                subprocess.Popen(["killall", "swaybg"])
-                time.sleep(0.005)
+                killProc = subprocess.Popen(["killall", "swaybg"])
+                killProc.wait()
             except subprocess.CalledProcessError:
                 pass
             try:
                 subprocess.check_output(["pgrep", "hyprpaper"], encoding='utf-8')
-                subprocess.Popen(["killall", "hyprpaper"])
-                time.sleep(0.005)
+                killProc = subprocess.Popen(["killall", "hyprpaper"])
+                killProc.wait()
             except subprocess.CalledProcessError:
                 pass
 
@@ -77,7 +79,8 @@ def change_wallpaper(image_path: Path, cf: Config, monitor: str, txt: Chinese|En
             command.extend(["--transition-fps", str(cf.swww_transition_fps)])
             if monitor != "All":
                 command.extend(["--outputs", monitor])
-            subprocess.Popen(command)
+            proc = subprocess.Popen(command)
+            proc.wait()
             print(f"{txt.msg_setwith} {cf.backend}")
 
         # feh backend:
